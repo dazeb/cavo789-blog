@@ -14,106 +14,103 @@ blueskyRecordKey:
 
 <TLDR>Managing dozens of server connections in a monolithic `~/.ssh/config` file quickly becomes unmaintainable and relies too heavily on memorization. This post demonstrates a cleaner approach by breaking your configuration into project-specific files within a `~/.ssh/conf.d/` directory, allowing you to attach rich, styled documentation directly above your host definitions. To tie it all together, you will implement a custom shell function (sshf) powered by FZF. This creates a fast, searchable Terminal User Interface (TUI) that lets you instantly filter hosts by name, project, or metadata. It also goes a step further by introducing custom keybindings, enabling you to trigger advanced contextual actions—like pinging servers, modifying configurations, or generating system inventories—directly from the search menu.</TLDR>
 
-On my machine, I've more and more hosts in my `~/.ssh/config` file. I can type `ssh server4` (see <Link to="/blog/zsh-plugin-ssh-config-suggestions">zsh-ssh-config-suggestions</Link>) to jump on that server but ... I've to remember the list of servers. It's OK if I've just a few but right now, I've around 50 servers and my memory is going to run overflow.
+On my machine, I've accumulated more and more hosts in my `~/.ssh/config` file. While I can type `ssh server4` (see <Link to="/blog/zsh-plugin-ssh-config-suggestions">zsh-ssh-config-suggestions</Link>) to jump to that server, I still have to remember the list of available servers. This is manageable when dealing with just a few, but I currently have around 50 servers, and relying solely on memory is no longer practical.
 
-It would be cool to get the full list of hosts using a TUI (*Terminal User Interface*), select the host and press <kbd>Enter</kbd>. And even more cool to get some information like the URL hosted on that server and miscelanous information like if there is a database used by the application, the version of PHP, ...
+It would be much more convenient to view the full list of hosts through a TUI (*Terminal User Interface*), select the desired host, and simply press <kbd>Enter</kbd>. Furthermore, it would be extremely helpful to access contextual information—such as the URL hosted on that server, whether a database is running, the PHP version, and more.
 
-It would be cool too to be able to create one `.conf` file by project to not have to maintain a big configuration file with 50 servers.  Let's see in this post how to achieve this.
+Additionally, creating one `.conf` file per project would eliminate the need to maintain a massive, monolithic configuration file containing all 50 servers. Let's explore how to achieve this setup in this post.
 
 <!-- truncate -->
 
-Before jumping in the technical part, here is what we'll obtain at the end of this article:
+Before diving into the technical details, here is a preview of the final result:
 
 ![Our sshf TUI](./images/tui.webp)
 
-In the left part, I have a search box (allowing me typing `amazing` and filter on that pattern) then a list of hosts and, on the right side, information about the selected host.
+On the left side, there is a search box (allowing me to type `amazing` to filter on that pattern) above a list of hosts. On the right side, contextual information about the selected host is displayed.
 
-Once the host is selected, I just need to press enter to create an SSH terminal session on that host; without to have to enter my credentials.
+Once a host is selected, I simply press <kbd>Enter</kbd> to open an SSH terminal session on that host—without having to enter my credentials manually.
 
-Let's start...
+Let's get started...
 
 ## Install FZF
 
-Read my previous <Link to="/blog/linux-fzf-introduction">Fuzzy Finder</Link> blog post if you need more detailled information but, otherwise, simply run the command below and finalize the installation by answering Yes to all questions. And follow instructions given on the console.
+Check out my previous <Link to="/blog/linux-fzf-introduction">Fuzzy Finder</Link> blog post if you need more detailed information. Otherwise, simply run the command below and complete the installation by answering "Yes" to all prompts, following the instructions displayed in your terminal.
 
 <Terminal wrap={true}>
 $ git clone --depth 1 https://github.com/junegunn/fzf.git ~/.fzf ; ~/.fzf/install
 </Terminal>
 
-Nothing to do with SSH but if you press <kbd>CTRL</kbd>+<kbd>R</kbd> right now, you'll get a much easier access to your console history. This is one of the feature of FZF.
+While this isn't strictly related to SSH, you can now press <kbd>CTRL</kbd>+<kbd>R</kbd> to enjoy much easier access to your console history. This is just one of the great features of FZF.
 
 ## SSH configuration
 
-The idea in this article is to have a smarter file, let's create the `~/.ssh/conf.d` folder and create your configuration there.
+The goal here is to organize your configuration more intelligently. Let's create an `~/.ssh/conf.d` folder where your configuration files will reside.
 
 <Terminal wrap={true}>
-mkdir -p ~/.ssh/conf.d
+$ mkdir -p ~/.ssh/conf.d
 </Terminal>
 
-So, for instance, create a `~/.ssh/conf.d/amazing.conf` file with this content:
+For instance, create an `~/.ssh/conf.d/amazing.conf` file with the following content:
 
 <Snippet filename="amazing.conf" source="./files/amazing.conf" defaultOpen={false} />
 
-and a second file called `~/.ssh/conf.d/legacy.conf` with this content
+Then, create a second file named `~/.ssh/conf.d/legacy.conf` with this content:
 
 <Snippet filename="legacy.conf" source="./files/legacy.conf" defaultOpen={false} />
 
-Now, in your `~/.ssh/config` file, simply do this:
+Now, update your main `~/.ssh/config` file to include these new files:
 
 ```conf
 Include conf.d/amazing.conf
-Include conf.d/legagy.conf
+Include conf.d/legacy.conf
 ```
 
-The idea here is just to group hosts by projects; nothing more.
+This approach simply allows you to group hosts by project, making them easier to manage.
 
 ### Look at the amazing.conf file
 
-We've defined three `Host` entries: `MyAmazingApp_PROD`, `MyAmazingApp_TEST` and `YourAmazingApp`.
+We've defined three `Host` entries: `MyAmazingApp_PROD`, `MyAmazingApp_TEST`, and `YourAmazingApp`.
 
-Just before the two first entries, we've added some comments (right before the `Host` line (it's important)).
+Notice that we've added some comments immediately before the first two `Host` lines (the placement is crucial).
 
-The doc-block is pure text; you can type what you want but, for easiness, some markers exist like `blue`, `green`, `red`, `yellow`,`bg-red`, `bg-yellow` and `bold`.
+This "doc-block" is plain text, so you can write whatever you like. For convenience, it supports markers like `blue`, `green`, `red`, `yellow`, `bg-red`, `bg-yellow`, and `bold`.
 
-You can then type everything you want. When the `MyAmazingApp_PROD` host will be selected, the TUI will display his doc-block.
+When the `MyAmazingApp_PROD` host is selected in the TUI, its associated doc-block will be displayed automatically.
 
 ## Add the sshf function
 
-Edit your `~/.bashrc` file (or `~/.zshrc` one) and add this function:
+Edit your `~/.bashrc` (or `~/.zshrc`) file and append this function:
 
-<Snippet  source="./files/sshf.zsh" defaultOpen={false} />
+<Snippet source="./files/sshf.zsh" defaultOpen={false} />
 
-Save and load the file by running `source ~/.bashrc` (or `source ~/.zshrc`).
+Save the file and apply the changes by running `source ~/.bashrc` (or `source ~/.zshrc`).
 
-Back to your terminal, simply type `sshf` and press <kbd>Enter</kbd>. The magic will happen now.
+Return to your terminal, type `sshf`, and press <kbd>Enter</kbd>. The magic will now unfold.
 
-You'll get the list of hosts defined in a list. By pressing some letters on your keyboard, you'll start to apply filters.  Simply type `prod` f.i. to filter on production servers.
+You will see the complete list of defined hosts. By typing a few letters, you will instantly apply filters. For example, simply type `prod` to filter the list and show only production servers.
 
-Easy no?
+Easy, isn't it?
 
 ## Using filtering options
 
-You can filter one everything you want so, for instance, let's type `php`:
+You can filter based on any pattern. For instance, if you type `php`:
 
 ![Filtering on PHP servers](./images/php.webp)
 
-FZF will filter on every pattern; not only the host name.
+FZF searches across all available data, not just the hostnames.
 
 ## My real use case
 
-At the office, I went way beyond just displaying the list of hosts.  In fact, FZF supports key bindings, which means you can assign actions to keys other than just ENTER.  You can also define actions such as CTRL-A, CTRL-I, ... or just a single letter like E.
+At work, I've taken this well beyond simply displaying a list of hosts. FZF supports custom keybindings, which means you can assign actions to keys other than just <kbd>Enter</kbd>. You can define actions triggered by <kbd>CTRL</kbd>+<kbd>A</kbd>, <kbd>CTRL</kbd>+<kbd>I</kbd>, or even a single letter like <kbd>E</kbd>.
 
-And that’s where it gets even more powerful!
+This is where it gets truly powerful!
 
-For <kbd>CTRL</kbd>+<kbd>A</kbd>, I’ve set up a second screen that displays a list of actions to run on the selected host.
+* For <kbd>CTRL</kbd>+<kbd>A</kbd>, I’ve set up a secondary screen that displays a list of actions to execute on the selected host.
+* For <kbd>CTRL</kbd>+<kbd>I</kbd>, I run an inventory management script that scans all my hosts (or just the filtered ones) and generates a web page with an up-to-date inventory of installed software (such as PHP, Python, PostgreSQL versions).
+* For <kbd>E</kbd>, you could, for example, open an editor to directly modify the configuration file of the selected host.
 
-For <kbd>CTRL</kbd>+<kbd>I</kbd>, I run an inventory management script that scans all my hosts—or just the filtered ones—and generates a web page with an up-to-date inventory (versions of PHP, Python, PostgreSQL, etc.).
-
-For <kbd>E</kbd>, for example, you could open the editor to update the configuration file where the selected host is configured.
-
-<Snippet  source="./files/sshf_actions.zsh" defaultOpen={false} />
-
+<Snippet source="./files/sshf_actions.zsh" defaultOpen={false} />
 
 ![Using Key bindings](./images/tui_with_actions.webp)
 
-Your imagination is your only limit
+Your imagination is the only limit!
