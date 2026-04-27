@@ -7,7 +7,7 @@ image: /img/v2/minification.webp
 mainTag: bash
 tags: [bash, tips]
 date: 2026-04-13
-blueskyRecordKey:
+blueskyRecordKey: 3mje5jxw6ts2a
 ---
 
 ![Streamline Your Frontend - Minifying Assets with Docker, Bash, and YAML](/img/v2/minification.webp)

@@ -7,7 +7,7 @@ mainTag: Doc-as-code
 tags: [doc-as-code, docker, mermaid, mindmap, python]
 image: /img/v2/docker-python-mermaid.webp
 date: 2026-04-20
-blueskyRecordKey:
+blueskyRecordKey: 3mjwbgrn2os2o
 ---
 
 ![Documentation as Code: Transform Your Infrastructure into Beautiful Diagrams with Python and Mermaid](/img/v2/docker-python-mermaid.webp)

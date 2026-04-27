@@ -8,7 +8,7 @@ description: Build an interactive, searchable SSH host selector using FZF. Learn
 mainTag: linux
 tags: [bash, customization, fzf, linux, tips]
 language: en
-blueskyRecordKey:
+blueskyRecordKey: 3mkhfxskcdk2z
 ---
 ![Master your ssh command and select the host from a list](/img/v2/sshf.webp)
 
