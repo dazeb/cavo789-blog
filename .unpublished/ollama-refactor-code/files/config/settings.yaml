@@ -1,0 +1,3 @@
+model: "qwen2.5-coder:7b"
+ollama_url: "http://localhost:11434"
+timeout: 90 # seconds

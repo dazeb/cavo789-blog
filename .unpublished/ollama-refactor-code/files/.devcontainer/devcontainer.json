@@ -1,0 +1,56 @@
+{
+    "name": "AI Code Reviewer Dev",
+    "build": {
+        "dockerfile": "Dockerfile"
+    },
+    // 1. FORCE le dossier de travail à une valeur simple
+    "workspaceFolder": "/app",
+
+    // 2. FORCE le montage du dossier actuel UNIQUEMENT
+    // source=${localWorkspaceFolder} = le dossier où tu as lancé "code ."
+    // target=/app = là où il sera dans le container
+    "workspaceMount": "source=${localWorkspaceFolder},target=/app,type=bind",
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "ms-python.python",              // Extension Python officielle
+                "ms-python.vscode-pylance",      // Intelligence de code (Pyright)
+                "charliermarsh.ruff",            // Ruff (Linter & Formatter)
+                "ms-python.mypy-type-checker",   // Mypy pour le typage strict
+                "tamasfe.even-better-toml",      // Support TOML (pour pyproject.toml)
+                "mechatroner.rainbow-csv"        // Confort pour les logs/csv
+            ],
+            "settings": {
+                // Interpréteur
+                "python.defaultInterpreterPath": "/usr/local/bin/python",
+                
+                // Ruff (Remplace Black/Flake8/Isort)
+                "python.formatting.provider": "none",
+                "[python]": {
+                    "editor.formatOnSave": true,
+                    "editor.defaultFormatter": "charliermarsh.ruff",
+                    "editor.codeActionsOnSave": {
+                        "source.fixAll": "explicit",
+                        "source.organizeImports": "explicit"
+                    }
+                },
+                
+                // Analyse Statique & Typage (Strict)
+                "python.analysis.typeCheckingMode": "strict",
+                "python.analysis.autoImportCompletions": true,
+                
+                // Mypy
+                "mypy-type-checker.args": [
+                    "--strict",
+                    "--ignore-missing-imports"
+                ],
+                "mypy-type-checker.reportingScope": "workspace"
+            }
+        }
+    },
+    // Commande lancée une fois que le container est prêt
+    "postCreateCommand": "sudo uv pip install --system -r pyproject.toml --group dev",
+    
+    "remoteUser": "vscode",
+    "updateRemoteUserUID": true
+}
